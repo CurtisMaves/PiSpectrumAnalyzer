@@ -5,7 +5,7 @@ from bibliopixel.drivers.driver_base import ChannelOrder
 import alsaaudio as aa
 import librosa
 from numpy import ndarray, int16, average, absolute, log10
-log.setLogLevel(log.DEBUG)
+#log.setLogLevel(log.DEBUG)
 basechange = log10(1.2201845430196)
 class Strip1(animation.BaseStripAnim):
     def __init__(self, led, start=0, end=-1):
@@ -24,10 +24,10 @@ class Strip1(animation.BaseStripAnim):
 
 
 class Spectrum(animation.BaseMatrixAnim):
-	def __init__(self, led, width = 8, height = 8):
+	def __init__(self, led, width = 6, height = 8):
 		super(Spectrum, self).__init__(led)
 		self.istream = aa.PCM(type=aa.PCM_CAPTURE, mode=aa.PCM_NORMAL, device='pulse')
-		self.chunk = 1024
+		self.chunk = 1718
 		self.istream.setperiodsize(self.chunk)
 		self.istream.setrate(44100)
 		self.istream.setchannels(2)
@@ -70,7 +70,7 @@ class Spectrum(animation.BaseMatrixAnim):
 
 def main():
 	spidriver = SPI(1, 48, spi_speed = 1, c_order = ChannelOrder.BRG, dev = "/dev/spidev0.0", interface = "PERIPHERY")
-	striplayout = Matrix(spidriver, width = 8, height = 6, serpentine = False, threadedUpdate=True)
+	striplayout = Matrix(spidriver, width = 6, height = 8, serpentine = False, threadedUpdate=True)
 	print(aa.pcms(aa.PCM_CAPTURE))
 
 	anim = Spectrum(striplayout)
