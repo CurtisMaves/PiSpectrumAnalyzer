@@ -41,8 +41,8 @@ class Spectrum(animation.BaseMatrixAnim):
 		fft = librosa.core.stft(soundarray, n_fft = 198)
 		sgram = absolute(fft)	
 		value = [0.0, 0.0, 0.0, 0.0]
-		value[0] = (average(sgram[0]) + average(sgram[1])) / 2 #Subwoofer frequencies
-		value[1] = (average(sgram[2]) + average(sgram[3]) + average(sgram[4])) / 3 #Woofer
+		value[0] = (average(sgram[0]) * 2 / 3 + average(sgram[1]) * 4 / 5) / 2 #Subwoofer frequencies
+		value[1] = (average(sgram[2]) * 8 / 9 + average(sgram[3]) * 12 /13 + average(sgram[4]) * 24 / 25) / 3 #Woofer
 
 		for i in range(5, 20):
 			value[2] += average(sgram[i])
