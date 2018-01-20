@@ -27,7 +27,7 @@ class Spectrum(animation.BaseMatrixAnim):
 	def __init__(self, led, width = 12, height = 4):
 		super(Spectrum, self).__init__(led)
 		self.istream = aa.PCM(type=aa.PCM_CAPTURE, mode=aa.PCM_NORMAL, device='pulse')
-		self.chunk = 1024
+		self.chunk = 2048
 		self.istream.setperiodsize(self.chunk)
 		self.istream.setrate(44100)
 		self.istream.setchannels(1)
@@ -38,27 +38,23 @@ class Spectrum(animation.BaseMatrixAnim):
 		dlen, data = self.istream.read()
 		soundarray = ndarray(buffer=data, shape = (self.chunk,), dtype=int16)
 
-		fft = librosa.core.stft(soundarray, n_fft = 198)
+		fft = librosa.core.stft(soundarray, n_fft = 398)
 		sgram = absolute(fft)	
 		value = [0.0, 0.0, 0.0, 0.0]
-		value[0] = (average(sgram[0]) * 2 / 3 + average(sgram[1]) * 4 / 5) / 2 #Subwoofer frequencies
-		value[1] = (average(sgram[2]) * 8 / 9 + average(sgram[3]) * 12 /13 + average(sgram[4]) * 24 / 25) / 3 #Woofer
+		bins = average(sgram, axis=1)
+		value[0] = max((bins[0] * 2 / 3, bins[1] * 3 / 4)) #SUB
+		value[1] = max((bins[2] * 8 / 9, bins[3] * 12 /13, bins[4] * 24 / 25)) #Woofer
 
-		for i in range(5, 20):
-			value[2] += average(sgram[i])
-		value[2] /=  15 #Mid-range
+		value[2] = bins[5:20].max()#midrange
 
-		for i in range(20, 100):
-			value[3] += average(sgram[i])
-		value[3] /= 80 #Tweeter
-		
+		value[3] = bins[20:200].max()#tweeter
 
 		value = log10(value) 
 		for y in range(4):
 			if value[y] == float("-inf"):
 				db = 0
 			else:
-				db = int((value[y] - 3) * 3)# / basechange)
+				db = int((value[y] - 4.5) * 9)# / basechange)
 			if db > 12:
 				db = 12
 			elif db < 1:
