@@ -59,7 +59,7 @@ class Spectrum(animation.BaseMatrixAnim):
 	def __init__(self, led, length = 300):
 		super(Spectrum, self).__init__(led)
 		self.input = SGram()
-		self.colors = [colors.Red, colors.Yellow, colors.Green, colors.Blue]
+		self.colors = [(170, 0, 0),  (85, 85, 0), (0, 170, 0), (0, 0, 170)]
 		self.half_length = int(ceil(length / 2))
 		self.seg_length = int(ceil(self.half_length / 4))
 
@@ -69,7 +69,7 @@ class Spectrum(animation.BaseMatrixAnim):
 			if value[y] == float("-inf"):
 				db = 0
 			else:
-				db = int(value[y] * self.seg_length)# / basechange)
+				db = int(value[y] * self.seg_length)
 			if db > self.seg_length:
 				db = 12
 			elif db < 1:
@@ -88,10 +88,22 @@ class StripSpectrum(animation.BaseStripAnim):
 		self.half_length = int(ceil(length / 2))
 		self.seg_length = int(ceil(self.half_length / 4))
 		self.colors = [colors.Red, colors.Yellow, colors.Green, colors.Blue]
+		self.cur_color = ((0,0,0),) * self.half_length
+		self.tar_color = ((0,0,0),) * self.half_length
+
+	def set_color(self, leds):
+		self.tar_color = leds
+
+		self.cur_color = [tuple((int((self.tar_color[x][y] + self.cur_color[x][y]) / 2) for y in range(3)))for x in range(self.half_length)]
+		for x in enumerate(self.cur_color):
+			self._led.set(x[0], x[1])
+			self._led.set(self.last - x[0], x[1])
+			
+
 	def step(self, amt = 1):
 		value = self.input.get()
 		count = 0	
-		led = [None] * self.half_length
+		led = [(0,0,0)] * self.half_length
 		for y in range(4):
 			if value[y] == float("-inf"):
 				db = 0
@@ -105,19 +117,16 @@ class StripSpectrum(animation.BaseStripAnim):
 			for x in range(db):
 				led[count] = self.colors[y]
 				count += 1
-		
-		#print("\n",count)
-		for x in range(count, self.length- count):
-			self._led.set(x, colors.Black)
-		for x in range(count):
-			self._led.set(x, led[x])
-			self._led.set(self.last - x, led[x])
+				if count >= self.half_length:
+					break
+
+		self.set_color(led)
 
 def main():
 	length = 300
 	npdriver = PiWS281X(length, c_order = ChannelOrder.RGB)
 	#striplayout = Matrix(spidriver, width = 12, height = 4, serpentine = False, threadedUpdate=True)
-	striplayout = Strip(npdriver, threadedUpdate=True, brightness = 50)
+	striplayout = Strip(npdriver, threadedUpdate=True,  brightness = 66)
 	print(aa.pcms(aa.PCM_CAPTURE))
 
 	anim = StripSpectrum(striplayout, length=length)
